@@ -3,6 +3,11 @@ package part2actors
 import akka.actor.typed.{ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 
+/**
+ * Tips: HOW to turn Stateful behavior to Stateless behavior
+ *  - each var/mutable field becomes an immutable METHOD ARGUMENT
+ *  - each state change = new behavior obtained by calling the method with a different argument
+ */
 object ActorState {
 
   /*
@@ -11,6 +16,65 @@ object ActorState {
       - keeps track of the TOTAL number of words received so far
       - log the current # of words + TOTAL # of words
    */
+
+  object WordCount2 {
+    def apply(): Behavior[String] = Behaviors.setup { context =>
+
+      /**
+       * Use of fields here creates a STATEFUL word counter
+       */
+      var totalWords = 0
+      val logger = context.log
+
+      Behaviors.receiveMessage { message =>
+        val words: Array[String] = message.split(' ')
+        totalWords += words.length
+
+        logger.info(s"Received ${words.length} words, total count is $totalWords")
+
+        Behaviors.same
+      }
+    }
+  }
+
+  def demoWordCount2() {
+    val actorSystem = ActorSystem(WordCount2(), "WordCount_2")
+
+    actorSystem ! "first wrods"
+    actorSystem ! "all my friends are heathens, take it slow"
+    actorSystem ! "HEATHENS !!!!!!!!!!!!!!!"
+
+    Thread.sleep(3000)
+    actorSystem.terminate()
+  }
+
+  object WordCount2_Stateless {
+    def apply(): Behavior[String] = statelessCount(0)
+
+    def statelessCount(totalWords: Int): Behavior[String] = Behaviors.setup { context =>
+      val logger = context.log
+
+      Behaviors.receiveMessage { message =>
+        val words: Array[String] = message.split(' ')
+        val total = words.length + totalWords
+        logger.info(s"Received ${words.length} words, total count is $total")
+        statelessCount(words.length + totalWords) // return the behavior from this stateMethod
+      }
+    }
+  }
+
+  def demoWordCount2_Stateless() {
+    val actorSystem = ActorSystem(WordCount2_Stateless(), "WordCount_2_Stateless")
+
+    actorSystem ! "first wrods"
+    actorSystem ! "all my friends are heathens, take it slow"
+    actorSystem ! "HEATHENS !!!!!!!!!!!!!!!"
+
+    Thread.sleep(3000)
+    actorSystem.terminate()
+  }
+
+
   object WordCounter {
     def apply(): Behavior[String] = Behaviors.setup { context =>
       var total = 0
@@ -66,6 +130,9 @@ object ActorState {
     human.terminate()
   }
 
+  /*
+  Not as same as recursion --> new behavior obtained will be used to process the next incoming message sometime in the future
+   */
   object SimpleHuman_V2 {
     def apply(): Behavior[SimpleThing] = statelessHuman(0)
 
@@ -83,12 +150,6 @@ object ActorState {
       }
     }
   }
-
-  /*
-    Tips:
-    - each var/mutable field becomes an immutable METHOD ARGUMENT
-    - each state change = new behavior obtained by calling the method with a different argument
-   */
 
   /**
    * Exercise: refactor the "stateful" word counter into a "stateless" version.
@@ -117,6 +178,8 @@ object ActorState {
   }
 
   def main(args: Array[String]): Unit = {
-    demoWordCounter()
+//    demoWordCounter()
+    demoWordCount2()
+    demoWordCount2_Stateless()
   }
 }

@@ -18,7 +18,6 @@ class UsingProbesSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       master ! Register(workerProbe.ref, externalProbe.ref)
       externalProbe.expectMessage(RegisterAck)
     }
-
     "send a task to the worker actor" in {
       val master = testKit.spawn(Master())
       val workerProbe = testKit.createTestProbe[WorkerTask]()

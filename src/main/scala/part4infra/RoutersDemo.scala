@@ -10,7 +10,16 @@ object RoutersDemo {
 
   def demoPoolRouter(): Unit = {
     val workerBehavior = LoggerActor[String]()
-    val poolRouter = Routers.pool(5)(workerBehavior).withBroadcastPredicate(_.length > 11) // round robin
+
+    // default task picking behavior is round robin
+    val poolRouter = Routers.pool(5)(workerBehavior)
+
+    // give a predicate to broadcast the message to all actors in the pool
+//    poolRouter.withBroadcastPredicate(_.length > 9)
+
+    // define consistent hashing based pooling
+    // (hashOutputMode % poolSize) * virtualNodesFactor
+//    poolRouter.withConsistentHashingRouting(32, input => s"hash output String from $input")
 
     val userGuardian = Behaviors.setup[Unit] { context =>
       val poolActor = context.spawn(poolRouter, "pool")

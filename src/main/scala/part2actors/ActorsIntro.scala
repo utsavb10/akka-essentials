@@ -16,10 +16,11 @@ object ActorsIntro {
 
   def demoSimpleActor(): Unit = {
     // part 2: instantiate
+//    val actorSystem = ActorSystem(simpleActorBehavior, "FirstActorSystem")
     val actorSystem = ActorSystem(Person.happy(), "FirstActorSystem")
 
     // part 3: communicate!
-    actorSystem ! "I am learning Akka" // asynchronously send a message
+    actorSystem ! "I am learning Akka" // asynchronously send a message of the type defined in the behaviour object
     // ! = the "tell" method
 
     // part 4: gracefully shut down
@@ -28,6 +29,10 @@ object ActorsIntro {
   }
 
   // "refactor"
+  /*
+  As a practice, the behaviour object is not defined in a field like simpleActorBehavior
+  But Behaviour shall be generated as apply methods of particular objects
+   */
   object SimpleActor {
     def apply(): Behavior[String] = Behaviors.receiveMessage { (message: String) =>
       // do something with the message
